@@ -1,5 +1,8 @@
 # hero caampued
 
+# tester fails all files when newlines are formatted as instructed in the assignment (\r\n)
+# fixed when changed to \n only
+
 import re
 
 capitals = []
@@ -39,7 +42,7 @@ def write_countries_capitals_to_file(filename):
     valid_filename_pattern = r"^[a-zA-Z0-9]{1,8}(\.txt)$"
     valid_filename = filename
 
-    while not re.match(valid_filename_pattern, valid_filename):
+    while not re.search(valid_filename_pattern, valid_filename):
         valid_filename = input("The file name must contain only letters or digits, be 1-8 characters in length, "
                                "and ends with a .txt file extension.\nPlease enter a valid file name: ")
 
@@ -92,6 +95,25 @@ def save_filtered_places():
     """
     global capitals, countries, places
 
+    filenames_and_patterns = {
+        "vowel_vowel_vowel.txt": r"[aeiou]{3}",  # 1
+        "notvowel_notvowel.txt": r"[aeiou]{2}",  # 2
+        "cons_cons_cons.txt": r"[bcdfghjklmnpqrstvwxyz]{3}",  # 3
+        "i_before_e.txt": r"i.*e",  # 4
+        "a_a.txt": r"^a.*a$",  # 5
+        "start_end_same.txt": r"[a-z]",  # 6 a bit weird, but this is the workaround I found
+        "weird.txt": r"[' \-]",  # 7
+        "not_start.txt": r"^[^a-el-ps]",  # 8
+        "multiple.txt": r".* .*",  # 9
+        "city_town.txt": r"(city|town)$",  # 10
+        "hyphen.txt": r"-",  # 11
+        "consonant_vowel.txt": r"^([bcdfghjklmnpqrstvwxyz].*[aeiou]|[aeiou].*[bcdfghjklmnpqrstvwxyz])$",  # 12
+        "spaces.txt": r" ",  # 13
+        "not_aeio.txt": r"^[^aeio]*$",  # 14
+        "alternating.txt": r"^(([aeiou][bcdfghjklmnpqrstvwxyz])+|([bcdfghjklmnpqrstvwxyz][aeiou])+)$",  # 15
+        "double.txt": r"aa|bb|cc|dd|ee|ff|gg|hh|ii|jj|kk|ll|mm|nn|oo|pp|qq|rr|ss|tt|uu|vv|ww|xx|yy|zz",  # 16
+    }
+
     with open("places.txt", "r") as data:
         places_data = data.readlines()
 
@@ -109,31 +131,49 @@ def save_filtered_places():
         countries = tuple(countries_list)
         places = places_dict
 
-    filenames_and_patterns = [
-        ("vowel_vowel_vowel.txt", r"^$"),
-        ("notvowel_notvowel.txt", r"^$"),
-        ("cons_cons_cons.txt", r"^$"),
-        ("i_before_e.txt", r"^$"),
-        ("a_a.txt", r"^$"),
-        ("start_end_same.txt", r"^$"),
-        ("weird.txt", r"^$"),
-        ("not_start.txt", r"^$"),
-        ("multiple.txt", r"^$"),
-        ("city_town.txt", r"^$"),
-        ("hyphen.txt", r"^$"),
-        ("consonant_vowel.txt", r"^$"),
-        ("spaces.txt", r"^$"),
-        ("not_aeio.txt", r"^$"),
-        ("alternating.txt", r"^$"),
-        ("double.txt", r"^$"),
-    ]
+    for filename, pattern in filenames_and_patterns.items():
+        with open(filename, "w") as file:
 
-    for filename, pattern in filenames_and_patterns:
+            for capital, country in places.items():
 
-    pass
+                # 2
+                if filename == "notvowel_notvowel.txt":
+                    if not re.search(pattern, country):
+                        file.write(country + "\n")
+                    if not re.search(pattern, capital):
+                        file.write(capital + "\n")
+
+                # 6
+                elif filename == "start_end_same.txt":
+                    start_country = re.findall(rf"^{pattern}", country)
+                    end_country = re.findall(rf"{pattern}$", country)
+                    if start_country and end_country and start_country[0] == end_country[0]:
+                        file.write(country + "\n")
+
+                    start_capital = re.findall(rf"^{pattern}", capital)
+                    end_capital = re.findall(rf"{pattern}$", capital)
+                    if start_capital and end_capital and start_capital[0] == end_capital[0]:
+                        file.write(capital + "\n")
+
+                # 13
+                elif filename == "spaces.txt":
+                    spaces_country = re.findall(pattern, country)
+
+                    if len(spaces_country) > 1:
+                        file.write(country + "\n")
+
+                    spaces_capital = re.findall(pattern, capital)
+                    if len(spaces_capital) > 1:
+                        file.write(capital + "\n")
+
+                else:
+                    if re.search(pattern, country):
+                        file.write(country + "\n")
+
+                    if re.search(pattern, capital):
+                        file.write(capital + "\n")
 
 
 # print(write_countries_capitals_to_file("a.txt"))
 # print(write_countries_capitals_to_file("5x.txt"))
 # print(write_countries_capitals_to_file("AbcE123z.txt"))
-write_countries_capitals_to_file("sdfsf.txt")
